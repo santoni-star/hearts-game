@@ -236,7 +236,8 @@
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:background="#80000000"
-                    android:padding="8dp 16dp"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="8dp"
                     android:visibility="gone" />
 
                 <!-- Pass phase overlay -->
