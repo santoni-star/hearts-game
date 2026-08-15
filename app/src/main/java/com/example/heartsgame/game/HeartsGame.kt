@@ -1,6 +1,7 @@
 package com.example.heartsgame.game
 
 import kotlin.random.Random
+import kotlin.math.maxOf
 
 /** Represents a player in the game */
 class Player(
@@ -161,7 +162,7 @@ class HeartsGame(
     /** AI chooses 3 cards to pass */
     private fun processAiPasses() {
         players.filter { !it.isHuman }.forEach { ai ->
-            val toPass = ai.personality.choosePass(ai.hand, passDirection, players, ai.position)
+            val toPass = ai.personality.strategy.choosePass(ai.hand, passDirection, players, ai.position)
             ai.passedCards.addAll(toPass)
             toPass.forEach { ai.removeCard(it) }
             ai.hasPassed = true
@@ -371,7 +372,7 @@ class HeartsGame(
         
         val aiPlayer = players[currentPlayer.index]
         val gameState = getGameState()
-        val card = aiPlayer.personality.choosePlay(aiPlayer.hand, currentTrick!!, gameState, aiPlayer.position)
+        val card = aiPlayer.personality.strategy.choosePlay(aiPlayer.hand, currentTrick!!, gameState, aiPlayer.position)
         
         if (card != null) {
             playCard(currentPlayer, card)
@@ -460,7 +461,7 @@ class BalancedAi : AiStrategy {
 class AggressiveAi : AiStrategy {
     private val balanced = BalancedAi()
 
-    override fun choosePass(hand: List[Card], direction: PassDirection, allPlayers: List<Player>, myPosition: PlayerPosition): List<Card> {
+    override fun choosePass(hand: List<Card>, direction: PassDirection, allPlayers: List<Player>, myPosition: PlayerPosition): List<Card> {
         // Keep high hearts for moon attempt, pass low cards and off-suit high cards
         val hearts = hand.filter { it.suit == Suit.HEARTS }.sortedByDescending { it.rank.value }
         val qSpades = hand.firstOrNull { it == Card(Suit.SPADES, Rank.QUEEN) }

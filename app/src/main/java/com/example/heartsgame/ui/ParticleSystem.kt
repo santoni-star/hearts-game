@@ -3,6 +3,8 @@ package com.example.heartsgame.ui
 import android.graphics.*
 import android.view.View
 import java.util.concurrent.CopyOnWriteArrayList
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * Particle system for heart bursts, moon celebrations, and other effects

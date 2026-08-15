@@ -211,7 +211,7 @@ class CardView @JvmOverloads constructor(
         canvas.drawText(suitSym, w / 2f, h / 2f + 16f, bigSuitPaint)
 
         // Special highlight for Queen of Spades
-        if (c.suit == Suit.SPADES && c.rank == c.rank.QUEEN) {
+        if (c.suit == Suit.SPADES && c.rank == Rank.QUEEN) {
             // Small crown or sparkle indicator
             val crownPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = Color.parseColor("#FFD700")

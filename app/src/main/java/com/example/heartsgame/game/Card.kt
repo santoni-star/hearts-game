@@ -1,10 +1,13 @@
 package com.example.heartsgame.game
 
+import kotlin.math.cos
+import kotlin.math.sin
+
 enum class Suit(val symbol: String, val color: Int, val order: Int) {
-    CLUBS("♣", 0xFF000000, 0),      // Black
-    DIAMONDS("♦", 0xFFCC0000, 1),   // Red
-    SPADES("♠", 0xFF000000, 2),     // Black
-    HEARTS("♥", 0xFFCC0000, 3)      // Red
+    CLUBS("♣", 0xFF000000.toInt(), 0),      // Black
+    DIAMONDS("♦", 0xFFCC0000.toInt(), 1),   // Red
+    SPADES("♠", 0xFF000000.toInt(), 2),     // Black
+    HEARTS("♥", 0xFFCC0000.toInt(), 3)      // Red
 }
 
 enum class Rank(val value: Int, val display: String, val order: Int) {

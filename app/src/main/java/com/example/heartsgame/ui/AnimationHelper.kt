@@ -11,6 +11,8 @@ import android.view.animation.OvershootInterpolator
 import android.widget.LinearLayout
 import com.example.heartsgame.game.Card
 import com.example.heartsgame.game.PlayerPosition
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * Animation utilities for Hearts game.
