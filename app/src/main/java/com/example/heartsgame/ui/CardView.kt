@@ -21,6 +21,7 @@ class CardView @JvmOverloads constructor(
     var canBeat: Boolean = false
     var isInTrick: Boolean = false  // Card played in current trick
     var trickOrder: Int = 0         // Order in trick (0-3) for positioning
+    var maxCardWidth: Int = 0       // Max card width for layout
 
     // Animation properties
     var animScaleX: Float = 1f

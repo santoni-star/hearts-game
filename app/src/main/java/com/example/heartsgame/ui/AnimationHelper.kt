@@ -31,9 +31,8 @@ object AnimationHelper {
     private const val SCORE_ANIM_DURATION = 500L
     private const val MOON_CELEBRATION_DURATION = 3000L
 
-    interface AnimCallback {
-        fun onEnd()
-    }
+    // Use function type instead of interface for simpler lambda usage
+    typealias AnimCallback = () -> Unit
 
     // =========================================================================
     // DEAL ANIMATIONS

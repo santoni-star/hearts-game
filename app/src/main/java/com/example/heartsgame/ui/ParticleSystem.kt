@@ -59,8 +59,9 @@ class ParticleSystem(private val view: View) {
         repeat(count) {
             val angle = random.nextFloat() * 360f
             val speed = 50f + random.nextFloat() * 100f
-            val vx = cos(Math.toRadians(angle).toFloat()) * speed
-            val vy = -sin(Math.toRadians(angle).toFloat()) * speed - 50f // Upward bias
+            val rad = Math.toRadians(angle.toDouble()).toFloat()
+            val vx = cos(rad) * speed
+            val vy = -sin(rad) * speed - 50f // Upward bias
             
             particles.add(Particle(
                 x = centerX,
@@ -84,8 +85,9 @@ class ParticleSystem(private val view: View) {
         repeat(12) {
             val angle = random.nextFloat() * 360f
             val speed = 80f + random.nextFloat() * 120f
-            val vx = cos(Math.toRadians(angle).toFloat()) * speed
-            val vy = -sin(Math.toRadians(angle).toFloat()) * speed - 30f
+            val rad = Math.toRadians(angle.toDouble()).toFloat()
+            val vx = cos(rad) * speed
+            val vy = -sin(rad) * speed - 30f
             
             particles.add(Particle(
                 x = centerX,
@@ -110,8 +112,9 @@ class ParticleSystem(private val view: View) {
         repeat(30) {
             val angle = random.nextFloat() * 360f
             val speed = 100f + random.nextFloat() * 200f
-            val vx = cos(Math.toRadians(angle).toFloat()) * speed
-            val vy = -sin(Math.toRadians(angle).toFloat()) * speed - 100f
+            val rad = Math.toRadians(angle.toDouble()).toFloat()
+            val vx = cos(rad) * speed
+            val vy = -sin(rad) * speed - 100f
             
             val colors = arrayOf(
                 Color.parseColor("#FFD700"), // Gold

@@ -67,6 +67,7 @@ class GameActivity : AppCompatActivity() {
     private lateinit var westHand: LinearLayout
     private lateinit var eastHand: LinearLayout
     private lateinit var southHand: LinearLayout
+    private lateinit var northHand: LinearLayout
     private lateinit var southHandScroll: HorizontalScrollView
 
     // South (human) UI
@@ -139,6 +140,7 @@ class GameActivity : AppCompatActivity() {
         westHand = findViewById(R.id.west_hand)
         eastHand = findViewById(R.id.east_hand)
         southHand = findViewById(R.id.south_hand)
+        northHand = findViewById(R.id.north_hand)
         southHandScroll = findViewById(R.id.south_hand_scroll)
 
         // South UI

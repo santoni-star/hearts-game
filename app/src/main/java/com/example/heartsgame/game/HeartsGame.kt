@@ -1,7 +1,7 @@
 package com.example.heartsgame.game
 
 import kotlin.random.Random
-import kotlin.math.maxOf
+import kotlin.comparisons.compareByDescending
 
 /** Represents a player in the game */
 class Player(
@@ -441,7 +441,7 @@ class BalancedAi : AiStrategy {
                 return if (winningCards.isNotEmpty()) winningCards.minByOrNull { it.rank.value } else sameSuit.minByOrNull { it.rank.value }
             } else {
                 // Void in suit - dump highest penalty card
-                val penalties = playable.filter { it.points > 0 }.sortedByDescending { it.points }.thenByDescending { it.rank.value }
+                val penalties = playable.filter { it.points > 0 }.sortedWith(compareByDescending<Card> { it.points }.thenByDescending { it.rank.value })
                 if (penalties.isNotEmpty()) return penalties.first()
                 // No penalties - dump highest card
                 return playable.maxByOrNull { it.rank.value }
@@ -512,7 +512,7 @@ class AggressiveAi : AiStrategy {
                 return if (winningCards.isNotEmpty()) winningCards.maxByOrNull { it.rank.value } else sameSuit.maxByOrNull { it.rank.value }
             } else {
                 // Void - play highest heart or Q♠ if we have them
-                val penalties = playable.filter { it.points > 0 }.sortedByDescending { it.points }.thenByDescending { it.rank.value }
+                val penalties = playable.filter { it.points > 0 }.sortedWith(compareByDescending<Card> { it.points }.thenByDescending { it.rank.value })
                 return penalties.firstOrNull() ?: playable.maxByOrNull { it.rank.value }
             }
         }
@@ -532,7 +532,7 @@ class DefensiveAi : AiStrategy {
 
     override fun choosePass(hand: List<Card>, direction: PassDirection, allPlayers: List<Player>, myPosition: PlayerPosition): List<Card> {
         // Aggressively pass ALL penalty cards
-        val penalties = hand.filter { it.points > 0 }.sortedByDescending { it.points }.thenByDescending { it.rank.value }
+        val penalties = hand.filter { it.points > 0 }.sortedWith(compareByDescending<Card> { it.points }.thenByDescending { it.rank.value })
         if (penalties.size >= 3) return penalties.take(3)
         
         val remaining = hand.filter { it.points == 0 }.sortedByDescending { it.rank.value }
@@ -561,7 +561,7 @@ class DefensiveAi : AiStrategy {
                 return sameSuit.minByOrNull { it.rank.value }
             } else {
                 // Void - dump highest penalty card
-                val penalties = playable.filter { it.points > 0 }.sortedByDescending { it.points }.thenByDescending { it.rank.value }
+                val penalties = playable.filter { it.points > 0 }.sortedWith(compareByDescending<Card> { it.points }.thenByDescending { it.rank.value })
                 return penalties.firstOrNull() ?: playable.maxByOrNull { it.rank.value }
             }
         }
