@@ -5,12 +5,16 @@ import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.heartsgame.game.*
 import com.example.heartsgame.ui.AnimationHelper
 import com.example.heartsgame.ui.CardView
 import com.example.heartsgame.ui.ParticleSystem
 import com.example.heartsgame.ui.TableBackgroundView
+import android.view.Gravity
+import android.graphics.Color
+import android.graphics.Typeface
 
 class GameActivity : AppCompatActivity() {
 
@@ -246,12 +250,12 @@ class GameActivity : AppCompatActivity() {
         }
     }
 
-    private fun getHandLayoutForPosition(pos: Int): LinearLayout {
-        return when (pos) {
-            0 -> southHand
-            1 -> westHand
-            2 -> northHand
-            else -> eastHand
+    private fun getHandLayoutForPosition(position: PlayerPosition): LinearLayout {
+        return when (position) {
+            PlayerPosition.SOUTH -> southHand
+            PlayerPosition.WEST -> westHand
+            PlayerPosition.NORTH -> northHand
+            PlayerPosition.EAST -> eastHand
         }
     }
 
@@ -264,7 +268,7 @@ class GameActivity : AppCompatActivity() {
         passOverlay.visibility = View.VISIBLE
         
         val human = game.players[0]
-        passDirectionText.text = getStringWhen(passDirection = game.passDirection) {
+        passDirectionText.text = when (game.passDirection) {
             PassDirection.LEFT -> "Pass 3 cards LEFT"
             PassDirection.RIGHT -> "Pass 3 cards RIGHT"
             PassDirection.ACROSS -> "Pass 3 cards ACROSS"
@@ -936,13 +940,6 @@ class GameActivity : AppCompatActivity() {
             PlayerPosition.NORTH -> "North"
             PlayerPosition.EAST -> "East"
         }
-    }
-
-    private fun getHandLayoutForPosition(index: Int): LinearLayout = when (index) {
-        0 -> southHand
-        1 -> westHand
-        2 -> northHand
-        else -> eastHand
     }
 
     private fun hideAllOverlays() {
