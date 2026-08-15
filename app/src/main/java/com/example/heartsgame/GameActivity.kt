@@ -12,9 +12,6 @@ import com.example.heartsgame.ui.AnimationHelper
 import com.example.heartsgame.ui.CardView
 import com.example.heartsgame.ui.ParticleSystem
 import com.example.heartsgame.ui.TableBackgroundView
-import android.view.Gravity
-import android.graphics.Color
-import android.graphics.Typeface
 
 class GameActivity : AppCompatActivity() {
 
@@ -252,12 +249,12 @@ class GameActivity : AppCompatActivity() {
         }
     }
 
-    private fun getHandLayoutForPosition(position: PlayerPosition): LinearLayout {
-        return when (position) {
-            PlayerPosition.SOUTH -> southHand
-            PlayerPosition.WEST -> westHand
-            PlayerPosition.NORTH -> northHand
-            PlayerPosition.EAST -> eastHand
+    private fun getHandLayoutForPosition(pos: Int): LinearLayout {
+        return when (pos) {
+            0 -> southHand
+            1 -> westHand
+            2 -> northHand
+            else -> eastHand
         }
     }
 
@@ -468,7 +465,7 @@ class GameActivity : AppCompatActivity() {
     // =========================================================================
 
     private fun runAi() {
-        if (game.isGameOver || aiRunning) return
+        if (game.gameOver || aiRunning) return
         aiRunning = true
         processAiStep()
     }
@@ -847,7 +844,7 @@ class GameActivity : AppCompatActivity() {
             cardView.cardSelected = true
             AnimationHelper.selectBounce(cardView, true)
             playButton.isEnabled = true
-            playButton.text = "PLAY ${card}"
+            playButton.text = "PLAY $card"
         } else {
             AnimationHelper.shakeView(cardView)
             playButton.isEnabled = false
@@ -942,6 +939,13 @@ class GameActivity : AppCompatActivity() {
             PlayerPosition.NORTH -> "North"
             PlayerPosition.EAST -> "East"
         }
+    }
+
+    private fun getHandLayoutForPosition(index: Int): LinearLayout = when (index) {
+        0 -> southHand
+        1 -> westHand
+        2 -> northHand
+        else -> eastHand
     }
 
     private fun hideAllOverlays() {
