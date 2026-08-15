@@ -941,13 +941,6 @@ class GameActivity : AppCompatActivity() {
         }
     }
 
-    private fun getHandLayoutForPosition(index: Int): LinearLayout = when (index) {
-        0 -> southHand
-        1 -> westHand
-        2 -> northHand
-        else -> eastHand
-    }
-
     private fun hideAllOverlays() {
         passOverlay.visibility = View.GONE
         passRevealArea.visibility = View.GONE
