@@ -1,4 +1,50 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Fool Game</string>
+    <string name="app_name">Hearts</string>
+    
+    <string name="player_south">You</string>
+    <string name="player_west">West</string>
+    <string name="player_north">North</string>
+    <string name="player_east">East</string>
+    
+    <string name="pass_left">Pass 3 cards LEFT</string>
+    <string name="pass_right">Pass 3 cards RIGHT</string>
+    <string name="pass_across">Pass 3 cards ACROSS</string>
+    <string name="pass_none">No passing this round</string>
+    
+    <string name="phase_passing">Select 3 cards to pass</string>
+    <string name="phase_playing">Your turn - Play a card</string>
+    <string name="phase_defending">Defend!</string>
+    
+    <string name="trick_lead">leads</string>
+    <string name="trick_follows">follows</string>
+    <string name="trick_wins">wins the trick</string>
+    
+    <string name="score_format">%d pts</string>
+    <string name="round_score_format">Round: %d</string>
+    <string name="total_score_format">Total: %d</string>
+    
+    <string name="hearts_broken">♥ Hearts Broken!</string>
+    <string name="queen_spades">♠ Q♠ Played!</string>
+    
+    <string name="moon_shot">SHOOT THE MOON!</string>
+    <string name="moon_shot_by">%s shot the moon!</string>
+    
+    <string name="round_complete">Round Complete</string>
+    <string name="round_scores">Round Scores</string>
+    
+    <string name="game_over">GAME OVER</string>
+    <string name="winner">Winner: %s</string>
+    <string name="final_standings">Final Standings</string>
+    
+    <string name="new_game">New Game</string>
+    <string name="confirm_pass">CONFIRM PASS</string>
+    <string name="next_round">NEXT ROUND</string>
+    <string name="play_again">PLAY AGAIN</string>
+    <string name="play_button">PLAY</string>
+    <string name="pass_button">PASS</string>
+    
+    <string name="pass_instruction">Tap 3 cards to pass, then press CONFIRM</string>
+    <string name="must_follow_suit">Must follow suit!</string>
+    <string name="cannot_lead_hearts">Cannot lead hearts until broken!</string>
+    <string name="must_play_two_clubs">First trick: must play 2♣</string>
 </resources>

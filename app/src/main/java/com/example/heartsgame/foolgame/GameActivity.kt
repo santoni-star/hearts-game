@@ -1,4 +1,4 @@
-package com.example.foolgame
+package com.example.heartsgame
 
 import android.os.Bundle
 import android.os.Handler
@@ -7,8 +7,9 @@ import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import com.example.foolgame.game.*
-import com.example.foolgame.ui.CardView
+import com.example.heartsgame.game.*
+import com.example.heartsgame.ui.AnimationHelper
+import com.example.heartsgame.ui.CardView
 
 class GameActivity : AppCompatActivity() {
 
@@ -27,6 +28,8 @@ class GameActivity : AppCompatActivity() {
     private val cardViews = mutableListOf<CardView>()
     private val handler = Handler(Looper.getMainLooper())
     private var aiRunning = false
+    private var animating = false
+    private var pendingAnimations = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,59 +54,131 @@ class GameActivity : AppCompatActivity() {
         takeButton.setOnClickListener { onTake() }
         findViewById<Button>(R.id.new_game_button).setOnClickListener { newGame() }
 
-        updateUI()
+        // Initial deal animation
+        dealInitialCards()
+    }
+
+    private fun dealInitialCards() {
+        // Deck position (center top-ish)
+        val deckX = playerHandLayout.width / 2f
+        val deckY = 100f * resources.displayMetrics.density
+
+        // Player gets 6 cards, AI gets 6 cards - alternate
+        var delay = 0L
+        val playerCards = game.playerHand.sortedBy { it.rank.value }
+        val aiCards = game.aiHand
+
+        for (i in 0 until 6) {
+            // Player card
+            if (i < playerCards.size) {
+                val cv = CardView(this)
+                cv.card = playerCards[i]
+                cv.isFaceUp = true
+                cv.layoutParams = LinearLayout.LayoutParams(0, 200, 1f).apply { setMargins(3, 4, 3, 4) }
+                cv.maxCardWidth = (80 * resources.displayMetrics.density).toInt()
+                playerHandLayout.addView(cv)
+                cardViews.add(cv)
+
+                // Schedule animation after layout
+                cv.post {
+                    val targetX = cv.x
+                    val targetY = cv.y
+                    AnimationHelper.dealCard(cv, deckX, deckY, targetX, targetY, delay) { endAnim() }
+                }
+                delay += 80
+            }
+
+            // AI card (face down)
+            if (i < aiCards.size) {
+                val cv = CardView(this).apply {
+                    isFaceUp = false
+                    layoutParams = LinearLayout.LayoutParams(0, 200, 1f).apply { setMargins(2, 4, 2, 4) }
+                }
+                aiHandLayout.addView(cv)
+
+                cv.post {
+                    val targetX = cv.x
+                    val targetY = cv.y
+                    AnimationHelper.dealCard(cv, deckX, deckY, targetX, targetY, delay) { endAnim() }
+                }
+                delay += 80
+            }
+        }
+
+        startAnim() // Will be ended by the last callback
+        // After all dealt, update UI fully
+        handler.postDelayed({ updateUI() }, delay + 500)
     }
 
     // --- Player action handlers ---
 
     private fun onPlay() {
-        if (aiRunning) return
+        if (aiRunning || animating) return
         when {
             // Attacking (first card or throw)
             game.phase == GamePhase.ATTACK_TURN && game.attacker == AttackRole.PLAYER_ATTACKER -> {
                 if (game.selectedCard == null) return
-                setButtonsEnabled(false)
-                if (game.playerPlaySelected()) {
-                    updateUI()
-                    if (game.isGameOver) {
-                        showResult()
+                val selectedCard = game.selectedCard!!
+                val cardView = cardViews.find { it.card == selectedCard } ?: return
+                val tableX = tableLayout.x + tableLayout.width / 2f
+                val tableY = tableLayout.y + tableLayout.height / 2f
+
+                startAnim()
+                AnimationHelper.playCard(cardView, cardView.x, cardView.y, tableX, tableY) {
+                    if (game.playerPlaySelected()) {
+                        endAnim()
+                        updateUI()
+                        if (game.isGameOver) {
+                            showResult()
+                        } else {
+                            // Must be DEFENSE_TURN now — AI defends
+                            AnimationHelper.startAiPulse(aiHandLayout)
+                            handler.postDelayed({ runAi() }, 500)
+                        }
                     } else {
-                        // Must be DEFENSE_TURN now — AI defends
-                        handler.postDelayed({ runAi() }, 500)
+                        endAnim()
+                        setButtonsEnabled(true)
                     }
-                } else {
-                    setButtonsEnabled(true)
                 }
             }
 
             // Defending (beating a card)
             game.phase == GamePhase.DEFENSE_TURN && game.attacker == AttackRole.AI_ATTACKER -> {
                 if (game.selectedCard == null) return
-                setButtonsEnabled(false)
-                if (game.playerDefend(game.selectedCard!!)) {
-                    updateUI()
-                    if (game.isGameOver) {
-                        showResult()
-                    } else if (game.phase == GamePhase.ATTACK_TURN && game.attacker == AttackRole.PLAYER_ATTACKER) {
-                        // Player defended successfully → player becomes attacker
-                        // Show updated UI with throw/pass options
+                val selectedCard = game.selectedCard!!
+                val cardView = cardViews.find { it.card == selectedCard } ?: return
+                val attackPair = tableLayout.getChildAt(tableLayout.childCount - 1) as? android.widget.LinearLayout
+                val attackView = attackPair?.getChildAt(0) as? CardView ?: return
+
+                startAnim()
+                AnimationHelper.beatCard(cardView, attackView) {
+                    if (game.playerDefend(selectedCard)) {
+                        endAnim()
+                        updateUI()
+                        if (game.isGameOver) {
+                            showResult()
+                        } else if (game.phase == GamePhase.ATTACK_TURN && game.attacker == AttackRole.PLAYER_ATTACKER) {
+                            // Player defended successfully → player becomes attacker
+                            setButtonsEnabled(true)
+                        } else if (game.phase == GamePhase.ATTACK_TURN && game.attacker == AttackRole.AI_ATTACKER) {
+                            // AI can throw more — run AI
+                            AnimationHelper.startAiPulse(aiHandLayout)
+                            handler.postDelayed({ runAi() }, 500)
+                        } else if (game.phase == GamePhase.DEFENSE_TURN) {
+                            AnimationHelper.startAiPulse(aiHandLayout)
+                            handler.postDelayed({ runAi() }, 500)
+                        }
+                    } else {
+                        endAnim()
                         setButtonsEnabled(true)
-                    } else if (game.phase == GamePhase.ATTACK_TURN && game.attacker == AttackRole.AI_ATTACKER) {
-                        // AI can throw more — run AI
-                        handler.postDelayed({ runAi() }, 500)
-                    } else if (game.phase == GamePhase.DEFENSE_TURN) {
-                        // Shouldn't happen, but just in case
-                        handler.postDelayed({ runAi() }, 500)
                     }
-                } else {
-                    setButtonsEnabled(true)
                 }
             }
         }
     }
 
     private fun onPass() {
-        if (aiRunning) return
+        if (aiRunning || animating) return
         if (game.phase == GamePhase.ATTACK_TURN && game.attacker == AttackRole.PLAYER_ATTACKER) {
             setButtonsEnabled(false)
             game.playerPassThrow()
@@ -112,22 +187,44 @@ class GameActivity : AppCompatActivity() {
                 showResult()
             } else {
                 // Roles switched — should be AI_ATTACKER now
+                AnimationHelper.startAiPulse(aiHandLayout)
                 handler.postDelayed({ runAi() }, 500)
             }
         }
     }
 
     private fun onTake() {
-        if (aiRunning) return
+        if (aiRunning || animating) return
         if (game.phase == GamePhase.DEFENSE_TURN && game.attacker == AttackRole.AI_ATTACKER) {
             setButtonsEnabled(false)
-            game.playerTakeCards()
-            updateUI()
-            if (game.isGameOver) {
-                showResult()
-            } else {
-                // Same attacker (AI) will attack again — run AI
-                handler.postDelayed({ runAi() }, 500)
+            
+            // Animate taking cards
+            val tableCardViews = mutableListOf<CardView>()
+            for (i in 0 until tableLayout.childCount) {
+                val pair = tableLayout.getChildAt(i) as? android.widget.LinearLayout
+                pair?.let {
+                    val atk = it.getChildAt(0) as? CardView
+                    val def = it.getChildAt(1) as? CardView
+                    atk?.let { tableCardViews.add(it) }
+                    def?.let { tableCardViews.add(it) }
+                }
+            }
+            
+            val targetX = playerHandLayout.x + playerHandLayout.width / 2f
+            val targetY = playerHandLayout.y + playerHandLayout.height / 2f
+            
+            startAnim()
+            AnimationHelper.takeCards(tableCardViews, targetX, targetY, 120) {
+                game.playerTakeCards()
+                endAnim()
+                updateUI()
+                if (game.isGameOver) {
+                    showResult()
+                } else {
+                    // Same attacker (AI) will attack again — run AI
+                    AnimationHelper.startAiPulse(aiHandLayout)
+                    handler.postDelayed({ runAi() }, 500)
+                }
             }
         }
     }
@@ -142,6 +239,7 @@ class GameActivity : AppCompatActivity() {
 
     private fun processAiStep() {
         if (game.isGameOver) {
+            AnimationHelper.stopAiPulse(aiHandLayout)
             updateUI(); showResult(); aiRunning = false; return
         }
 
@@ -150,30 +248,42 @@ class GameActivity : AppCompatActivity() {
 
         if (!shouldAct) {
             // Player's turn — stop AI and show controls
+            AnimationHelper.stopAiPulse(aiHandLayout)
             updateUI()
             aiRunning = false
             return
         }
 
         val action = game.executeAiTurn()
-        updateUI()
+        
+        // Animate AI action based on type
         when (action) {
-            is AiAction.ATTACKED   -> statusText.text = "AI attacks with ${action.card}"
-            is AiAction.DEFENDED   -> statusText.text = "AI defends with ${action.card}"
-            is AiAction.THROWN     -> statusText.text = "AI throws ${action.card}"
-            is AiAction.THROW_PASS -> statusText.text = "AI passes"
-            is AiAction.TOOK_CARDS -> statusText.text = "AI takes cards!"
-            is AiAction.NOTHING    -> {}
+            is AiAction.ATTACKED -> {
+                statusText.text = "AI attacks with ${action.card}"
+                animateAiAttack(action.card)
+            }
+            is AiAction.DEFENDED -> {
+                statusText.text = "AI defends with ${action.card}"
+                animateAiDefend(action.card)
+            }
+            is AiAction.THROWN -> {
+                statusText.text = "AI throws ${action.card}"
+                animateAiThrow(action.card)
+            }
+            is AiAction.THROW_PASS -> {
+                statusText.text = "AI passes"
+                animateAiPass()
+            }
+            is AiAction.TOOK_CARDS -> {
+                statusText.text = "AI takes cards!"
+                animateAiTake()
+            }
+            is AiAction.NOTHING -> {
+                // Shouldn't happen, but fallback
+                updateUI()
+                handler.postDelayed({ processAiStep() }, 900)
+            }
         }
-        game.clearSelection()
-
-        if (game.isGameOver) {
-            runOnUiThread { updateUI(); showResult(); aiRunning = false }
-            return
-        }
-
-        // Delay before next AI step so player can see what happened
-        handler.postDelayed({ processAiStep() }, 900)
     }
 
     // --- UI update ---
@@ -229,7 +339,11 @@ class GameActivity : AppCompatActivity() {
     private fun updateCardSelections() {
         val sel = game.selectedCard
         for (cv in cardViews) {
+            val wasSelected = cv.cardSelected
             cv.cardSelected = cv.card == sel
+            if (cv.cardSelected != wasSelected) {
+                AnimationHelper.selectBounce(cv, cv.cardSelected)
+            }
             cv.postInvalidate()
         }
     }
@@ -375,6 +489,110 @@ class GameActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         handler.removeCallbacksAndMessages(null)
+        AnimationHelper.stopAiPulse(aiHandLayout)
         super.onDestroy()
+    }
+
+    // --- Animation management ---
+
+    private fun startAnim() {
+        animating = true
+        pendingAnimations++
+        setButtonsEnabled(false)
+    }
+
+    private fun endAnim() {
+        pendingAnimations--
+        if (pendingAnimations <= 0) {
+            animating = false
+            pendingAnimations = 0
+            updateButtons()
+        }
+    }
+
+    private fun waitForAnimations(callback: () -> Unit) {
+        if (!animating) {
+            callback()
+        } else {
+            handler.postDelayed({ waitForAnimations(callback) }, 50)
+        }
+    }
+
+    // --- Animation callbacks ---
+
+    private fun animateAiAttack(card: com.example.heartsgame.game.Card) {
+        // Find the AI card view that matches (it's face down, so we animate the first AI card)
+        val aiCardView = aiHandLayout.getChildAt(0) as? CardView ?: run { updateUI(); nextAiStep(); return }
+        val tableX = tableLayout.x + tableLayout.width / 2f
+        val tableY = tableLayout.y + tableLayout.height / 2f
+
+        startAnim()
+        AnimationHelper.playCard(aiCardView, aiCardView.x, aiCardView.y, tableX, tableY) {
+            endAnim()
+            updateUI()
+            nextAiStep()
+        }
+    }
+
+    private fun animateAiDefend(card: com.example.heartsgame.game.Card) {
+        val aiCardView = aiHandLayout.getChildAt(0) as? CardView ?: run { updateUI(); nextAiStep(); return }
+        val attackPair = tableLayout.getChildAt(tableLayout.childCount - 1) as? android.widget.LinearLayout
+        val attackView = attackPair?.getChildAt(0) as? CardView ?: run { updateUI(); nextAiStep(); return }
+
+        startAnim()
+        AnimationHelper.beatCard(aiCardView, attackView) {
+            endAnim()
+            updateUI()
+            nextAiStep()
+        }
+    }
+
+    private fun animateAiThrow(card: com.example.heartsgame.game.Card) {
+        val aiCardView = aiHandLayout.getChildAt(0) as? CardView ?: run { updateUI(); nextAiStep(); return }
+        val tableX = tableLayout.x + tableLayout.width / 2f
+        val tableY = tableLayout.y + tableLayout.height / 2f
+
+        startAnim()
+        AnimationHelper.playCard(aiCardView, aiCardView.x, aiCardView.y, tableX, tableY) {
+            endAnim()
+            updateUI()
+            nextAiStep()
+        }
+    }
+
+    private fun animateAiPass() {
+        updateUI()
+        nextAiStep()
+    }
+
+    private fun animateAiTake() {
+        val tableCardViews = mutableListOf<CardView>()
+        for (i in 0 until tableLayout.childCount) {
+            val pair = tableLayout.getChildAt(i) as? android.widget.LinearLayout
+            pair?.let {
+                val atk = it.getChildAt(0) as? CardView
+                val def = it.getChildAt(1) as? CardView
+                atk?.let { tableCardViews.add(it) }
+                def?.let { tableCardViews.add(it) }
+            }
+        }
+
+        val targetX = aiHandLayout.x + aiHandLayout.width / 2f
+        val targetY = aiHandLayout.y + aiHandLayout.height / 2f
+
+        startAnim()
+        AnimationHelper.takeCards(tableCardViews, targetX, targetY, 120) {
+            endAnim()
+            updateUI()
+            nextAiStep()
+        }
+    }
+
+    private fun nextAiStep() {
+        if (game.isGameOver) {
+            runOnUiThread { updateUI(); showResult(); aiRunning = false }
+            return
+        }
+        handler.postDelayed({ processAiStep() }, 900)
     }
 }

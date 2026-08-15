@@ -1,4 +1,4 @@
-package com.example.foolgame.game
+package com.example.heartsgame.game
 
 /**
  * Who is the attacker in the current exchange.

@@ -1,4 +1,4 @@
-package com.example.foolgame.game
+package com.example.heartsgame.game
 
 enum class Suit(val symbol: String, val color: String) {
     SPADES("\u2660", "black"),

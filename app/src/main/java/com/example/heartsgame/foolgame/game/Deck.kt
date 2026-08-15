@@ -1,4 +1,4 @@
-package com.example.foolgame.game
+package com.example.heartsgame.game
 
 class Deck {
     private val cards = mutableListOf<Card>()

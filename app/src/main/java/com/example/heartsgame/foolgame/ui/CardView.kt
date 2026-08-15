@@ -1,11 +1,11 @@
-package com.example.foolgame.ui
+package com.example.heartsgame.ui
 
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
-import com.example.foolgame.game.Card
-import com.example.foolgame.game.Suit
+import com.example.heartsgame.game.Card
+import com.example.heartsgame.game.Suit
 
 class CardView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
